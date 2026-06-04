@@ -272,6 +272,7 @@ class EcgWaveformPainter extends CustomPainter {
     this.beatsPerScreen = 3.5,
     this.strokeWidth = 2.4,
     this.fill = true,
+    this.backgroundFillColor,
     this.gain = 0.34,
     this.baseline = 0.6,
     this.motion = 0,
@@ -284,6 +285,7 @@ class EcgWaveformPainter extends CustomPainter {
   final double beatsPerScreen;
   final double strokeWidth;
   final bool fill;
+  final Color? backgroundFillColor;
   final double gain;
   final double baseline; // vertical position of the isoelectric line (0..1)
   final double motion; // 0..1 live movement level
@@ -321,11 +323,25 @@ class EcgWaveformPainter extends CustomPainter {
         ..lineTo(size.width, size.height)
         ..lineTo(0, size.height)
         ..close();
+
+      if (backgroundFillColor != null) {
+        final greyPaint = Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              backgroundFillColor!.withValues(alpha: 0.55),
+              backgroundFillColor!.withValues(alpha: 0.08),
+            ],
+          ).createShader(Offset.zero & size);
+        canvas.drawPath(fillPath, greyPaint);
+      }
+
       final fillPaint = Paint()
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [color.withValues(alpha: 0.26), color.withValues(alpha: 0)],
+          colors: [color.withValues(alpha: 0.22), color.withValues(alpha: 0)],
         ).createShader(Offset.zero & size);
       canvas.drawPath(fillPath, fillPaint);
     }
@@ -354,7 +370,8 @@ class EcgWaveformPainter extends CustomPainter {
       old.color != color ||
       old.model != model ||
       old.motion != motion ||
-      old.digitized != digitized;
+      old.digitized != digitized ||
+      old.backgroundFillColor != backgroundFillColor;
 }
 
 /// Paints a static, multi‑beat ECG strip from the digitised AD8232 ADC counts,
@@ -423,6 +440,7 @@ class AnimatedEcgLine extends StatefulWidget {
     this.color = AppColors.accentPink,
     this.beatsPerScreen = 3.5,
     this.fill = true,
+    this.backgroundFillColor = const Color(0xFF3A3A3E),
     this.motion,
     this.digitized = true,
   });
@@ -431,6 +449,7 @@ class AnimatedEcgLine extends StatefulWidget {
   final Color color;
   final double beatsPerScreen;
   final bool fill;
+  final Color backgroundFillColor;
 
   /// Live movement level (0..1), typically driven by the gyroscope. When it
   /// rises, the trace picks up motion artifacts and the heart rate climbs.
@@ -488,6 +507,7 @@ class _AnimatedEcgLineState extends State<AnimatedEcgLine>
             color: widget.color,
             beatsPerScreen: widget.beatsPerScreen,
             fill: widget.fill,
+            backgroundFillColor: widget.backgroundFillColor,
             motion: widget.motion?.value ?? 0,
             digitized: widget.digitized,
           ),
