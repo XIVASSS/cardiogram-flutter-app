@@ -45,9 +45,10 @@ class _NearbyScreenState extends State<NearbyScreen> {
     setState(() {
       _loadingFacilities = true;
       _facilityError = null;
+      _facilities = [];
     });
     try {
-      final pos = await NearbyFacilitiesService.currentPositionOrFallback();
+      final pos = await NearbyFacilitiesService.resolvePosition();
       final list = await NearbyFacilitiesService.fetchNear(
         latitude: pos.latitude,
         longitude: pos.longitude,
@@ -57,6 +58,9 @@ class _NearbyScreenState extends State<NearbyScreen> {
         _position = pos;
         _facilities = list;
         _loadingFacilities = false;
+        _facilityError = list.isEmpty
+            ? 'No hospitals or clinics found within 15 km of your location.'
+            : null;
       });
     } on NearbyException catch (e) {
       if (!mounted) return;
@@ -344,15 +348,37 @@ class _NearbyScreenState extends State<NearbyScreen> {
                       letterSpacing: 0.4,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  if (_position != null && !_loadingFacilities && _facilityError == null)
+                    Text(
+                      'Real hospitals near your GPS location.',
+                      style: TextStyle(
+                        color: AppColors.textTertiary.withValues(alpha: 0.9),
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
                   const SizedBox(height: 12),
                   if (_loadingFacilities)
                     const Padding(
                       padding: EdgeInsets.all(24),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.accentPink,
-                          strokeWidth: 2.4,
-                        ),
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(
+                            color: AppColors.accentPink,
+                            strokeWidth: 2.4,
+                          ),
+                          SizedBox(height: 14),
+                          Text(
+                            'Using your location to find nearby hospitals…',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
                       ),
                     )
                   else if (_facilityError != null)
