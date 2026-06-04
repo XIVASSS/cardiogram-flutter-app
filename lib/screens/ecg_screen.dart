@@ -172,28 +172,36 @@ class _EcgScreenState extends State<EcgScreen> {
       body: Column(
         children: [
           const IosStatusBar(),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              onPressed: _onBack,
-              icon: const Icon(
-                Icons.chevron_left_rounded,
-                color: AppColors.textPrimary,
-                size: 30,
-              ),
+          SizedBox(
+            height: 44,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  left: 4,
+                  child: IconButton(
+                    onPressed: _onBack,
+                    icon: const Icon(
+                      Icons.chevron_left_rounded,
+                      color: AppColors.textPrimary,
+                      size: 30,
+                    ),
+                  ),
+                ),
+                const Text(
+                  'ECG',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
             ),
           ),
-          const Text(
-            'ECG',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 20),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: _SessionButton(
               recording: _recording,
               timeLabel: _formattedTime,
@@ -202,51 +210,57 @@ class _EcgScreenState extends State<EcgScreen> {
           ),
           Expanded(
             child: _recording
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 30),
+                ? AnimatedEcgLine(
+                    model: _model,
+                    color: AppColors.accentPink,
+                    beatsPerScreen: 3.2,
+                    motion: _motion,
+                  )
+                : Center(
                     child: AnimatedEcgLine(
                       model: _model,
-                      color: AppColors.accentPink,
-                      beatsPerScreen: 3.4,
+                      color: AppColors.textTertiary,
+                      beatsPerScreen: 3.2,
                       motion: _motion,
-                    ),
-                  )
-                : const Center(
-                    child: Text(
-                      'Session paused',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      backgroundFillColor: const Color(0xFF2A2A2C),
                     ),
                   ),
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 24, bottom: 48),
+            padding: EdgeInsets.fromLTRB(
+              24,
+              8,
+              24,
+              32 + MediaQuery.paddingOf(context).bottom,
+            ),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
+                    duration: const Duration(milliseconds: 280),
                     child: Text(
-                      '$_bpm',
-                      key: ValueKey(_bpm),
+                      _recording ? '$_bpm' : '0',
+                      key: ValueKey(_recording ? _bpm : 0),
                       style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 80,
+                        color: AppColors.textPrimary,
+                        fontSize: 88,
                         fontWeight: FontWeight.w300,
-                        height: 1.0,
+                        height: 0.95,
+                        letterSpacing: -2,
                       ),
                     ),
                   ),
                   const Padding(
-                    padding: EdgeInsets.only(left: 4, top: 2),
+                    padding: EdgeInsets.only(left: 2, top: 4),
                     child: Text(
                       'BPM',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                        fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        letterSpacing: 1,
+                        letterSpacing: 0.8,
                       ),
                     ),
                   ),
@@ -276,53 +290,39 @@ class _SessionButton extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Ink(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.accentPink, AppColors.accentPinkDark],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.accentPink.withValues(alpha: 0.45),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            color: AppColors.accentPink,
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             child: Row(
               children: [
-                Text(
-                  recording ? 'Session' : 'Resume',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (recording) ...[
-                  const SizedBox(width: 10),
-                  Text(
-                    timeLabel,
+                Expanded(
+                  child: Text(
+                    recording
+                        ? 'Recording · $timeLabel'
+                        : 'Tap to start session',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      fontFeatures: [FontFeature.tabularFigures()],
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.1,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-                const Spacer(),
+                ),
+                const SizedBox(width: 12),
                 Icon(
                   recording
-                      ? Icons.monitor_heart_rounded
+                      ? Icons.auto_awesome_rounded
                       : Icons.play_arrow_rounded,
                   color: Colors.white,
-                  size: 22,
+                  size: 20,
                 ),
               ],
             ),
